@@ -15,7 +15,7 @@ export default function TrackPayments() {
   const canEdit = user?.role === 'editor' || user?.role === 'admin'
 
   const [hideCertified, setHideCertified] = useState(false)
-  const [clientFilter, setClientFilter] = useState('')
+  const [projectFilter, setProjectFilter] = useState('')
   const [deleteId, setDeleteId] = useState(null)
   const [editPayment, setEditPayment] = useState(null)
   const [editForm, setEditForm] = useState({})
@@ -42,25 +42,25 @@ export default function TrackPayments() {
 
   const allPayments = Array.isArray(data) ? data : data?.results || []
 
-  // Collect unique clients from payments
-  const clients = [...new Set(allPayments.map((p) => p.project_client).filter(Boolean))]
+  // Collect unique project names from payments
+  const projectNames = [...new Set(allPayments.map((p) => p.project_name).filter(Boolean))]
 
   let filtered = allPayments
-  if (hideCertified) filtered = filtered.filter((p) => p.Status !== 'Certified')
-  if (clientFilter) filtered = filtered.filter((p) => p.project_client === clientFilter)
+  if (hideCertified) filtered = filtered.filter((p) => !p.Certified)
+  if (projectFilter) filtered = filtered.filter((p) => p.project_name === projectFilter)
 
   const totalPending = filtered
-    .filter((p) => p.Status !== 'Certified')
-    .reduce((s, p) => s + Number(p.Payment_Value || 0), 0)
+    .filter((p) => !p.Certified)
+    .reduce((s, p) => s + Number(p.Payment_value || 0), 0)
 
   const openEdit = (pay) => {
     setEditPayment(pay)
     setEditForm({
-      Payment_Value: pay.Payment_Value,
-      Date_Submitted: pay.Date_Submitted || '',
-      Date_Certified: pay.Date_Certified || '',
+      Payment_value: pay.Payment_value,
+      Date_of_submission: pay.Date_of_submission || '',
+      Date_of_certification: pay.Date_of_certification || '',
       Payment_Slot: pay.Payment_Slot || '',
-      Status: pay.Status || 'Pending',
+      Certified: pay.Certified || false,
     })
   }
 
@@ -79,7 +79,7 @@ export default function TrackPayments() {
         </div>
         <div className="card border border-yellow-200 bg-yellow-50">
           <div className="text-2xl font-bold text-yellow-800">
-            {allPayments.filter((p) => p.Status !== 'Certified').length}
+            {allPayments.filter((p) => !p.Certified).length}
           </div>
           <div className="text-sm text-yellow-700 mt-1">Pending Payments</div>
         </div>
@@ -102,11 +102,11 @@ export default function TrackPayments() {
         </label>
         <select
           className="input w-48"
-          value={clientFilter}
-          onChange={(e) => setClientFilter(e.target.value)}
+          value={projectFilter}
+          onChange={(e) => setProjectFilter(e.target.value)}
         >
-          <option value="">All Clients</option>
-          {clients.map((c) => <option key={c} value={c}>{c}</option>)}
+          <option value="">All Projects</option>
+          {projectNames.map((n) => <option key={n} value={n}>{n}</option>)}
         </select>
       </div>
 
@@ -128,30 +128,30 @@ export default function TrackPayments() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filtered.map((pay) => (
-                <tr key={pay.id} className={pay.Status === 'Certified' ? 'bg-green-50' : ''}>
+                <tr key={pay.Payment_ID} className={pay.Certified ? 'bg-green-50' : ''}>
                   <td className="table-td">
-                    <Link to={`/projects/${pay.project}`} className="text-blue-700 hover:underline font-medium">
-                      {pay.project_number || pay.project}
+                    <Link to={`/projects/${pay.Project_number}`} className="text-blue-700 hover:underline font-medium">
+                      {pay.Project_number}
                     </Link>
                   </td>
                   <td className="table-td max-w-[160px] truncate">{pay.project_name || '-'}</td>
                   <td className="table-td">{pay.Payment_Slot || '-'}</td>
-                  <td className="table-td font-mono text-right">{formatCurrency(pay.Payment_Value)}</td>
-                  <td className="table-td">{formatDate(pay.Date_Submitted)}</td>
+                  <td className="table-td font-mono text-right">{formatCurrency(pay.Payment_value)}</td>
+                  <td className="table-td">{formatDate(pay.Date_of_submission)}</td>
                   <td className="table-td">
-                    {pay.Status === 'Certified' ? (
+                    {pay.Certified ? (
                       <span className="badge-green">Certified</span>
                     ) : (
                       <span className="badge-yellow">Pending</span>
                     )}
                   </td>
-                  <td className="table-td">{formatDate(pay.Date_Certified)}</td>
+                  <td className="table-td">{formatDate(pay.Date_of_certification)}</td>
                   {canEdit && (
                     <td className="table-td">
                       <div className="flex gap-1">
-                        {pay.Status !== 'Certified' && (
+                        {!pay.Certified && (
                           <button
-                            onClick={() => certifyMutation.mutate(pay.id)}
+                            onClick={() => certifyMutation.mutate(pay.Payment_ID)}
                             disabled={certifyMutation.isPending}
                             className="btn btn-success btn-sm"
                           >
@@ -159,7 +159,7 @@ export default function TrackPayments() {
                           </button>
                         )}
                         <button onClick={() => openEdit(pay)} className="btn btn-secondary btn-sm">Edit</button>
-                        <button onClick={() => setDeleteId(pay.id)} className="btn btn-danger btn-sm">Del</button>
+                        <button onClick={() => setDeleteId(pay.Payment_ID)} className="btn btn-danger btn-sm">Del</button>
                       </div>
                     </td>
                   )}
@@ -186,8 +186,8 @@ export default function TrackPayments() {
               type="number"
               step="0.01"
               className="input"
-              value={editForm.Payment_Value || ''}
-              onChange={(e) => setEditForm({ ...editForm, Payment_Value: e.target.value })}
+              value={editForm.Payment_value || ''}
+              onChange={(e) => setEditForm({ ...editForm, Payment_value: e.target.value })}
             />
           </div>
           <div>
@@ -195,36 +195,36 @@ export default function TrackPayments() {
             <input
               type="date"
               className="input"
-              value={editForm.Date_Submitted || ''}
-              onChange={(e) => setEditForm({ ...editForm, Date_Submitted: e.target.value })}
+              value={editForm.Date_of_submission || ''}
+              onChange={(e) => setEditForm({ ...editForm, Date_of_submission: e.target.value })}
             />
           </div>
           <div>
             <label className="label">Status</label>
             <select
               className="input"
-              value={editForm.Status}
-              onChange={(e) => setEditForm({ ...editForm, Status: e.target.value })}
+              value={editForm.Certified ? 'Certified' : 'Pending'}
+              onChange={(e) => setEditForm({ ...editForm, Certified: e.target.value === 'Certified' })}
             >
               <option value="Pending">Pending</option>
               <option value="Certified">Certified</option>
             </select>
           </div>
-          {editForm.Status === 'Certified' && (
+          {editForm.Certified && (
             <div>
               <label className="label">Date Certified</label>
               <input
                 type="date"
                 className="input"
-                value={editForm.Date_Certified || ''}
-                onChange={(e) => setEditForm({ ...editForm, Date_Certified: e.target.value })}
+                value={editForm.Date_of_certification || ''}
+                onChange={(e) => setEditForm({ ...editForm, Date_of_certification: e.target.value })}
               />
             </div>
           )}
           <div className="flex justify-end gap-3 pt-2">
             <button onClick={() => setEditPayment(null)} className="btn btn-secondary">Cancel</button>
             <button
-              onClick={() => updateMutation.mutate({ id: editPayment.id, data: editForm })}
+              onClick={() => updateMutation.mutate({ id: editPayment.Payment_ID, data: editForm })}
               className="btn btn-primary"
             >
               Save

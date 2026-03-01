@@ -137,7 +137,7 @@ export default function ProjectDetail() {
   }
 
   const paymentsList = Array.isArray(payments) ? payments : payments?.results || []
-  const totalPaid = paymentsList.reduce((s, pay) => s + Number(pay.Payment_Value || 0), 0)
+  const totalPaid = paymentsList.reduce((s, pay) => s + Number(pay.Payment_value || 0), 0)
   const boqList = Array.isArray(boqItems) ? boqItems : boqItems?.results || []
   const attachList = Array.isArray(attachments) ? attachments : attachments?.results || []
 
@@ -262,31 +262,31 @@ export default function ProjectDetail() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {paymentsList.map((pay) => (
-                    <tr key={pay.id}>
+                    <tr key={pay.Payment_ID}>
                       <td className="table-td">{pay.Payment_Slot || '-'}</td>
-                      <td className="table-td font-mono text-right">{formatCurrency(pay.Payment_Value)}</td>
-                      <td className="table-td">{formatDate(pay.Date_Submitted)}</td>
+                      <td className="table-td font-mono text-right">{formatCurrency(pay.Payment_value)}</td>
+                      <td className="table-td">{formatDate(pay.Date_of_submission)}</td>
                       <td className="table-td">
-                        {pay.Status === 'Certified' ? (
+                        {pay.Certified ? (
                           <span className="badge-green">Certified</span>
                         ) : (
                           <span className="badge-yellow">Pending</span>
                         )}
                       </td>
-                      <td className="table-td">{formatDate(pay.Date_Certified)}</td>
+                      <td className="table-td">{formatDate(pay.Date_of_certification)}</td>
                       {canEdit && (
                         <td className="table-td">
                           <div className="flex gap-1">
-                            {pay.Status !== 'Certified' && (
+                            {!pay.Certified && (
                               <button
-                                onClick={() => certifyMutation.mutate(pay.id)}
+                                onClick={() => certifyMutation.mutate(pay.Payment_ID)}
                                 className="btn btn-success btn-sm"
                               >
                                 Certify
                               </button>
                             )}
                             <button
-                              onClick={() => setDeletePaymentId(pay.id)}
+                              onClick={() => setDeletePaymentId(pay.Payment_ID)}
                               className="btn btn-danger btn-sm"
                             >
                               Del

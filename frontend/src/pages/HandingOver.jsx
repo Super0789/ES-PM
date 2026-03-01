@@ -56,18 +56,18 @@ function InlineEdit({ value, options, onSave, type = 'select' }) {
 function ProjectRow({ project, onUpdate }) {
   const qc = useQueryClient()
   const mutation = useMutation({
-    mutationFn: (payload) => updateHandingOver(project.id, payload),
+    mutationFn: (payload) => updateHandingOver(project.Project_number, payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['handing-over'] }),
   })
 
   return (
     <tr className="hover:bg-gray-50">
       <td className="table-td">
-        <Link to={`/projects/${project.id}`} className="text-blue-700 hover:underline font-medium">
+        <Link to={`/projects/${project.Project_number}`} className="text-blue-700 hover:underline font-medium">
           {project.Project_number}
         </Link>
       </td>
-      <td className="table-td max-w-[150px] truncate">{project.Project_name || '-'}</td>
+      <td className="table-td max-w-[150px] truncate">{project.Project_Name || '-'}</td>
       <td className="table-td">{project.Client || '-'}</td>
       <td className="table-td">
         <InlineEdit
@@ -78,9 +78,9 @@ function ProjectRow({ project, onUpdate }) {
       </td>
       <td className="table-td">
         <InlineEdit
-          value={project.Initial_Handing_Over_Letter_Date}
+          value={project.Initial_Handing_Over_Letter}
           type="date"
-          onSave={(v) => mutation.mutate({ Initial_Handing_Over_Letter_Date: v || null })}
+          onSave={(v) => mutation.mutate({ Initial_Handing_Over_Letter: v || null })}
         />
       </td>
       <td className="table-td">
@@ -92,16 +92,16 @@ function ProjectRow({ project, onUpdate }) {
       </td>
       <td className="table-td">
         <InlineEdit
-          value={project.Final_Handing_Over_Letter_Date}
+          value={project.Final_Handing_Over_Letter}
           type="date"
-          onSave={(v) => mutation.mutate({ Final_Handing_Over_Letter_Date: v || null })}
+          onSave={(v) => mutation.mutate({ Final_Handing_Over_Letter: v || null })}
         />
       </td>
       <td className="table-td max-w-[160px]">
         <InlineEdit
-          value={project.Initial_Handing_Over_Comments}
+          value={project.Initial_Handing_Over_Comments_Letter}
           type="text"
-          onSave={(v) => mutation.mutate({ Initial_Handing_Over_Comments: v })}
+          onSave={(v) => mutation.mutate({ Initial_Handing_Over_Comments_Letter: v })}
         />
       </td>
     </tr>
@@ -134,7 +134,7 @@ export default function HandingOver() {
   const overdueHO = filtered.filter((p) => {
     if (p.Initial_Handing_Over_Status !== 'Done') return false
     if (p.Final_Handing_Over_Status === 'Done') return false
-    const date = p.Initial_Handing_Over_Letter_Date
+    const date = p.Initial_Handing_Over_Letter
     if (!date) return false
     const diff = (new Date() - new Date(date)) / (1000 * 60 * 60 * 24 * 365)
     return diff > 1
@@ -157,7 +157,7 @@ export default function HandingOver() {
         </thead>
         <tbody className="divide-y divide-gray-100">
           {projects.map((p) => (
-            <ProjectRow key={p.id} project={p} />
+            <ProjectRow key={p.Project_number} project={p} />
           ))}
           {projects.length === 0 && (
             <tr>

@@ -57,22 +57,22 @@ export default function OverdueProjects() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {projects.map((p) => {
-                const days = getDaysOverdue(p.End_Date)
+                const days = getDaysOverdue(p.Project_End_date)
                 return (
-                  <tr key={p.id} className="bg-red-50 hover:bg-red-100">
+                  <tr key={p.Project_number} className="bg-red-50 hover:bg-red-100">
                     <td className="table-td">
                       <Link
-                        to={`/projects/${p.id}`}
+                        to={`/projects/${p.Project_number}`}
                         className="text-blue-700 hover:underline font-medium"
                       >
                         {p.Project_number}
                       </Link>
                     </td>
-                    <td className="table-td max-w-[180px] truncate">{p.Project_name || '-'}</td>
+                    <td className="table-td max-w-[180px] truncate">{p.Project_Name || '-'}</td>
                     <td className="table-td">{p.Client || '-'}</td>
                     <td className="table-td">{p.Project_Manager || '-'}</td>
                     <td className="table-td text-red-600 font-medium">
-                      {formatDate(p.End_Date)}
+                      {formatDate(p.Project_End_date)}
                     </td>
                     <td className="table-td">
                       {days != null ? (
@@ -80,8 +80,8 @@ export default function OverdueProjects() {
                       ) : '-'}
                     </td>
                     <td className="table-td">
-                      {p.Physical_Completion != null
-                        ? `${(p.Physical_Completion * 100).toFixed(1)}%`
+                      {p.percent_Physical_Completed != null
+                        ? `${(p.percent_Physical_Completed * 100).toFixed(1)}%`
                         : '-'}
                     </td>
                   </tr>
