@@ -17,8 +17,8 @@ class Attachment(models.Model):
         blank=True,
         related_name='attachments',
     )
-    Field_name = models.CharField(max_length=100)
-    File_path = models.FileField(upload_to='attachments/')
+    Field_name = models.CharField(max_length=255)
+    File_path = models.FileField(upload_to='attachments/', max_length=500)
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
