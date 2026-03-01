@@ -87,11 +87,19 @@ class Command(BaseCommand):
         available_tables = {row['name'] for row in cursor.fetchall()}
         self.stdout.write(f'Tables found: {", ".join(sorted(available_tables))}')
 
+        # Each step gets its own transaction so a failure in one
+        # doesn't roll back previously imported data.
         with transaction.atomic():
             self._import_projects(cursor, available_tables, Project, skip_existing)
+
+        with transaction.atomic():
             self._import_payments(cursor, available_tables, Payment, Project, skip_existing)
+
+        with transaction.atomic():
             self._import_boq(cursor, available_tables, ApprovedBOQ, Project, skip_existing)
-            self._import_attachments(cursor, available_tables, Attachment, Project, Payment, skip_existing)
+
+        # Attachments are handled individually (per-row try/except)
+        self._import_attachments(cursor, available_tables, Attachment, Project, Payment, skip_existing)
 
         conn.close()
         self.stdout.write(self.style.SUCCESS('Import completed successfully.'))
@@ -99,7 +107,6 @@ class Command(BaseCommand):
     # ── Projects ──────────────────────────────────────────────────────────
 
     def _import_projects(self, cursor, tables, Project, skip_existing):
-        # Try common table names
         table = self._find_table(tables, ['projects_project', 'projects', 'project', 'Projects'])
         if not table:
             self.stdout.write(self.style.WARNING('No projects table found – skipping.'))
@@ -119,7 +126,6 @@ class Command(BaseCommand):
                 skipped += 1
                 continue
 
-            # Map all known fields, falling back to sensible defaults
             defaults = dict(
                 Project_Name=str(r.get('Project_Name') or r.get('project_name') or ''),
                 Client=str(r.get('Client') or r.get('client') or ''),
@@ -142,11 +148,9 @@ class Command(BaseCommand):
                 Project_End_date=_parse_date(r.get('Project_End_date') or r.get('Project_End_Date')),
             )
 
-            # Variations
             for i in range(1, 8):
                 defaults[f'Variation_{i}'] = _parse_decimal(r.get(f'Variation_{i}'))
 
-            # Payments
             for i in range(1, 15):
                 defaults[f'Payment_{i}'] = _parse_decimal(r.get(f'Payment_{i}'))
 
@@ -276,17 +280,37 @@ class Command(BaseCommand):
                     pass
 
             file_path = str(r.get('File_path') or r.get('file_path') or '')
+            field_name = str(r.get('Field_name') or r.get('field_name') or '')
+
+            # Truncate values that are too long to prevent DB errors
+            if len(file_path) > 500:
+                self.stdout.write(self.style.WARNING(
+                    f'  Attachment {att_id}: File_path truncated from {len(file_path)} to 500 chars.'
+                ))
+                file_path = file_path[:500]
+            if len(field_name) > 255:
+                self.stdout.write(self.style.WARNING(
+                    f'  Attachment {att_id}: Field_name truncated from {len(field_name)} to 255 chars.'
+                ))
+                field_name = field_name[:255]
 
             obj = Attachment(
                 Project_number=project,
                 Payment_ID=payment,
-                Field_name=str(r.get('Field_name') or r.get('field_name') or ''),
+                Field_name=field_name,
                 File_path=file_path,
             )
             if att_id:
                 obj.Attachment_ID = att_id
-            obj.save()
-            created += 1
+
+            try:
+                obj.save()
+                created += 1
+            except Exception as e:
+                self.stdout.write(self.style.WARNING(
+                    f'  Attachment {att_id} failed to save: {e} – skipping.'
+                ))
+                errors += 1
 
         self.stdout.write(f'Attachments: {created} imported, {skipped} skipped, {errors} errors.')
 
