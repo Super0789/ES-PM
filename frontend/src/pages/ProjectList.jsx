@@ -182,22 +182,22 @@ export default function ProjectList() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {projects.map((p) => (
-                  <tr key={p.id} className={rowClass(p)}>
+                  <tr key={p.Project_number} className={rowClass(p)}>
                     <td className="table-td">
                       <Link
-                        to={`/projects/${p.id}`}
+                        to={`/projects/${p.Project_number}`}
                         className="text-blue-700 hover:underline font-medium"
                       >
                         {p.Project_number}
                       </Link>
                     </td>
-                    <td className="table-td max-w-[180px] truncate">{p.Project_name || '-'}</td>
+                    <td className="table-td max-w-[180px] truncate">{p.Project_Name || '-'}</td>
                     <td className="table-td max-w-[140px] truncate">{p.Client || '-'}</td>
                     <td className="table-td">{p.Project_Manager || '-'}</td>
-                    <td className="table-td font-mono text-right">{formatCurrency(p.Contract_Value)}</td>
-                    <td className="table-td font-mono text-right">{formatCurrency(p.Project_Value)}</td>
-                    <td className="table-td">{formatPercent(p.Physical_Completion)}</td>
-                    <td className="table-td">{formatPercent(p.Financial_Completion)}</td>
+                    <td className="table-td font-mono text-right">{formatCurrency(p.Main_Contract_Value)}</td>
+                    <td className="table-td font-mono text-right">{formatCurrency(p.overall_project_value)}</td>
+                    <td className="table-td">{formatPercent(p.percent_Physical_Completed)}</td>
+                    <td className="table-td">{formatPercent(p.financial_percent_completed)}</td>
                     <td className="table-td">
                       {p.Project_Finished === 'Yes' ? (
                         <span className="badge-green">Completed</span>
@@ -211,13 +211,13 @@ export default function ProjectList() {
                       <td className="table-td">
                         <div className="flex gap-1">
                           <button
-                            onClick={() => navigate(`/projects/${p.id}/edit`)}
+                            onClick={() => navigate(`/projects/${p.Project_number}/edit`)}
                             className="btn btn-secondary btn-sm"
                           >
                             Edit
                           </button>
                           <button
-                            onClick={() => setDeleteId(p.id)}
+                            onClick={() => setDeleteId(p.Project_number)}
                             className="btn btn-danger btn-sm"
                           >
                             Del

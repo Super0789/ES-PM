@@ -43,7 +43,7 @@ export const getOverdueProjects = async (params = {}) => {
 }
 
 export const getHandingOverProjects = async (params = {}) => {
-  const { data } = await api.get('/projects/handing_over/', { params })
+  const { data } = await api.get('/projects/handing-over/', { params })
   return data
 }
 
