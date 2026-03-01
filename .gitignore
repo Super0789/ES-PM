@@ -205,3 +205,31 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Docker volumes / runtime data
+media/
+
+# IDE
+.idea/
+.vscode/
+
+# Python cache
+**/__pycache__/
+*.py[cod]
+
+# Dev SQLite database
+backend/db.sqlite3
+
+# Frontend build output
+frontend/dist/
